@@ -2,13 +2,15 @@ var router = require('express').Router()
 var vulnDict = require('../config/vulns')
 var authHandler = require('../core/authHandler')
 
-module.exports = function (passport) {
+module.exports = function (passport, csrfProtection) {
 	router.get('/', authHandler.isAuthenticated, function (req, res) {
 		res.redirect('/learn')
 	})
 
-	router.get('/login', authHandler.isNotAuthenticated, function (req, res) {
-		res.render('login')
+	router.get('/login', authHandler.isNotAuthenticated, csrfProtection, function (req, res) {
+		res.render('login', {
+			csrfToken: req.csrfToken()
+		})
 	})
 
 	router.get('/learn/vulnerability/:vuln', authHandler.isAuthenticated, function (req, res) {
@@ -33,8 +35,10 @@ module.exports = function (passport) {
 		res.render('learn',{vulnerabilities:vulnDict})
 	})
 
-	router.get('/register', authHandler.isNotAuthenticated, function (req, res) {
-		res.render('register')
+	router.get('/register', authHandler.isNotAuthenticated, csrfProtection, function (req, res) {
+		res.render('register', {
+			csrfToken: req.csrfToken()
+		})
 	})
 
 	router.get('/logout', function (req, res) {
@@ -42,27 +46,30 @@ module.exports = function (passport) {
 		res.redirect('/');
 	})
 
-	router.get('/forgotpw', function (req, res) {
-		res.render('forgotpw')
+	router.get('/forgotpw', csrfProtection, function (req, res) {
+		res.render('forgotpw', {
+			csrfToken: req.csrfToken()
+		})
 	})
 
-	router.get('/resetpw', authHandler.resetPw)
+	router.get('/resetpw', csrfProtection, authHandler.resetPw)
 
-	router.post('/login', passport.authenticate('login', {
+	// POST routes with CSRF protection
+	router.post('/login', csrfProtection, passport.authenticate('login', {
 		successRedirect: '/learn',
 		failureRedirect: '/login',
 		failureFlash: true
 	}))
 
-	router.post('/register', passport.authenticate('signup', {
+	router.post('/register', csrfProtection, passport.authenticate('signup', {
 		successRedirect: '/learn',
 		failureRedirect: '/register',
 		failureFlash: true
 	}))
 
-	router.post('/forgotpw', authHandler.forgotPw)
+	router.post('/forgotpw', csrfProtection, authHandler.forgotPw)
 
-	router.post('/resetpw', authHandler.resetPwSubmit)
+	router.post('/resetpw', csrfProtection, authHandler.resetPwSubmit)
 
 	return router
 }

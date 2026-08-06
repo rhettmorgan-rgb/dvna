@@ -2,35 +2,43 @@ var router = require('express').Router()
 var appHandler = require('../core/appHandler')
 var authHandler = require('../core/authHandler')
 
-module.exports = function () {
+module.exports = function (csrfProtection) {
     router.get('/', authHandler.isAuthenticated, function (req, res) {
         res.redirect('/learn')
     })
 
-    router.get('/usersearch', authHandler.isAuthenticated, function (req, res) {
+    router.get('/usersearch', authHandler.isAuthenticated, csrfProtection, function (req, res) {
         res.render('app/usersearch', {
-            output: null
+            output: null,
+            csrfToken: req.csrfToken()
         })
     })
 
-    router.get('/ping', authHandler.isAuthenticated, function (req, res) {
+    router.get('/ping', authHandler.isAuthenticated, csrfProtection, function (req, res) {
         res.render('app/ping', {
-            output: null
+            output: null,
+            csrfToken: req.csrfToken()
         })
     })
 
-    router.get('/bulkproducts', authHandler.isAuthenticated, function (req, res) {
-        res.render('app/bulkproducts',{legacy:req.query.legacy})
+    router.get('/bulkproducts', authHandler.isAuthenticated, csrfProtection, function (req, res) {
+        res.render('app/bulkproducts',{
+            legacy:req.query.legacy,
+            csrfToken: req.csrfToken()
+        })
     })
 
     router.get('/products', authHandler.isAuthenticated, appHandler.listProducts)
 
-    router.get('/modifyproduct', authHandler.isAuthenticated, appHandler.modifyProduct)
+    router.get('/modifyproduct', authHandler.isAuthenticated, csrfProtection, appHandler.modifyProduct)
 
-    router.get('/useredit', authHandler.isAuthenticated, appHandler.userEdit)
+    router.get('/useredit', authHandler.isAuthenticated, csrfProtection, appHandler.userEdit)
 
-    router.get('/calc', authHandler.isAuthenticated, function (req, res) {
-        res.render('app/calc',{output:null})
+    router.get('/calc', authHandler.isAuthenticated, csrfProtection, function (req, res) {
+        res.render('app/calc',{
+            output:null,
+            csrfToken: req.csrfToken()
+        })
     })
 
     router.get('/admin', authHandler.isAuthenticated, function (req, res) {
@@ -47,21 +55,22 @@ module.exports = function () {
 
     router.get('/redirect', appHandler.redirect)
 
-    router.post('/usersearch', authHandler.isAuthenticated, appHandler.userSearch)
+    // POST routes with CSRF protection
+    router.post('/usersearch', authHandler.isAuthenticated, csrfProtection, appHandler.userSearch)
 
-    router.post('/ping', authHandler.isAuthenticated, appHandler.ping)
+    router.post('/ping', authHandler.isAuthenticated, csrfProtection, appHandler.ping)
 
-    router.post('/products', authHandler.isAuthenticated, appHandler.productSearch)
+    router.post('/products', authHandler.isAuthenticated, csrfProtection, appHandler.productSearch)
 
-    router.post('/modifyproduct', authHandler.isAuthenticated, appHandler.modifyProductSubmit)
+    router.post('/modifyproduct', authHandler.isAuthenticated, csrfProtection, appHandler.modifyProductSubmit)
 
-    router.post('/useredit', authHandler.isAuthenticated, appHandler.userEditSubmit)
+    router.post('/useredit', authHandler.isAuthenticated, csrfProtection, appHandler.userEditSubmit)
 
-    router.post('/calc', authHandler.isAuthenticated, appHandler.calc)
+    router.post('/calc', authHandler.isAuthenticated, csrfProtection, appHandler.calc)
 
-    router.post('/bulkproducts',authHandler.isAuthenticated, appHandler.bulkProducts);
+    router.post('/bulkproducts', authHandler.isAuthenticated, csrfProtection, appHandler.bulkProducts);
 
-    router.post('/bulkproductslegacy',authHandler.isAuthenticated, appHandler.bulkProductsLegacy);
+    router.post('/bulkproductslegacy', authHandler.isAuthenticated, csrfProtection, appHandler.bulkProductsLegacy);
 
     return router
 }
