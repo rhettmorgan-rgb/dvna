@@ -46,10 +46,17 @@ module.exports.resetPw = function (req, res) {
 			}
 		}).then(user => {
 			if (user) {
-				if (req.query.token == md5(req.query.login)) {
+				// Fixed: Use cryptographically secure token instead of MD5
+				var crypto = require('crypto')
+				var expectedToken = crypto.createHmac('sha256', process.env.RESET_TOKEN_SECRET || 'change-this-in-production')
+					.update(req.query.login)
+					.digest('hex')
+				
+				if (req.query.token == expectedToken) {
 					res.render('resetpw', {
 						login: req.query.login,
-						token: req.query.token
+						token: req.query.token,
+						csrfToken: req.csrfToken()
 					})
 				} else {
 					req.flash('danger', "Invalid reset token")
@@ -75,10 +82,16 @@ module.exports.resetPwSubmit = function (req, res) {
 				}
 			}).then(user => {
 				if (user) {
-					if (req.body.token == md5(req.body.login)) {
+					// Fixed: Use cryptographically secure token instead of MD5
+					var crypto = require('crypto')
+					var expectedToken = crypto.createHmac('sha256', process.env.RESET_TOKEN_SECRET || 'change-this-in-production')
+						.update(req.body.login)
+						.digest('hex')
+					
+					if (req.body.token == expectedToken) {
 						user.password = bCrypt.hashSync(req.body.password, bCrypt.genSaltSync(10), null)
 						user.save().then(function () {
-							req.flash('success', "Passowrd successfully reset")
+							req.flash('success', "Password successfully reset")
 							res.redirect('/login')
 						})
 					} else {
@@ -91,10 +104,11 @@ module.exports.resetPwSubmit = function (req, res) {
 				}
 			})
 		} else {
-			req.flash('danger', "Passowords do not match")
+			req.flash('danger', "Passwords do not match")
 			res.render('resetpw', {
-				login: req.query.login,
-				token: req.query.token
+				login: req.body.login,
+				token: req.body.token,
+				csrfToken: req.csrfToken()
 			})
 		}
 
